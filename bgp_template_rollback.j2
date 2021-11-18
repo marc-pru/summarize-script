@@ -1,0 +1,22 @@
+conf t
+!
+router bgp 65000
+ {%- for vrf in bgp_vrf_dict %}
+  {%- if bgp_default_vrf_dict[hostname] == vrf %}
+ address-family ipv4
+  {%- else %}
+ address-family ipv4 vrf {{ vrf }}
+  {%- endif %}
+  {%- for summary, summary_mask in bgp_vrf_dict[vrf].items() %}
+  no aggregate-address {{ summary }} {{ summary_mask }} summary-only
+  {%- if vrf in bgp_remove_aggregate_dict %}
+  {%- for summary, summary_mask in bgp_remove_aggregate_dict[vrf].items() %}
+  aggregate-address {{ summary }} {{ summary_mask }} summary-only
+  {%- endfor %}
+  {%- endif %}
+  {%- endfor %}
+ exit-address-family
+ !
+ {%- endfor %}
+end
+!
